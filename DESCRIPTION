@@ -1,0 +1,33 @@
+Package: griddleR
+Title: Wrap Simulation Input and Output
+Version: 0.0.0.9000
+Authors@R:
+    person("Scott", "Olesen", , "ulp7@cdc.gov", role = c("aut", "cre"))
+Description: Standardize parameter input, input storage, and output.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Suggests:
+    arrow,
+    deSolve,
+    dplyr,
+    future,
+    ggplot2,
+    knitr,
+    qpdf,
+    readr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    tibble,
+    withr
+Config/testthat/edition: 3
+Imports:
+    furrr,
+    glue,
+    methods,
+    purrr,
+    rlang,
+    tidyr,
+    yaml
+VignetteBuilder: knitr

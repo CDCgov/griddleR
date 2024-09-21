@@ -1,0 +1,150 @@
+---
+title: "SIR ODE using griddleR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SIR ODE using griddleR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, message = FALSE}
+library(griddleR)
+library(dplyr)
+library(ggplot2)
+```
+
+Let's set up a simple simulation, that takes in a list of parameters, runs an
+SIR ODE, and outputs the sizes of the compartments at different time points:
+
+```{r model}
+# given time, compartment sizes, and paramters, compute rates of compartment
+# size change
+sir_ode <- function(t, state, params) {
+  names(state) <- c("S", "I", "R")
+  out <- with(c(state, params), {
+    N <- sum(state)
+    gamma <- 1.0 / infectious_period
+    beta <- R0 * infectious_period
+
+    dS <- -beta * S / N * I
+    dI <- -dS - I * gamma
+    dR <- I * gamma
+
+    c(dS, dI, dR)
+  })
+
+  stopifnot(abs(sum(out)) < 1e-6)
+
+  list(out)
+}
+
+sir <- function(params) {
+  # initialize simulation state
+  state0 <- c(S = 1.0 - params$I0, I = params$I0, R = 0.0)
+  # select times to output compartment sizes
+  times <- seq(0, params$max_time, length.out = params$n_points)
+  # run the ODE
+  result <- deSolve::ode(state0, times, sir_ode, params)
+  # the result is a weird object: it's a matrix, with columns of type deSolve.
+  # instead, make this a tibble with simple numeric columns.
+  result |>
+    as_tibble() |>
+    mutate(across(everything(), as.numeric))
+}
+```
+
+Let's run the simulation for just one parameter set:
+
+```{r sir_example}
+result <- sir(list(
+  R0 = 2.0,
+  infectious_period = 1.0,
+  I0 = 1e-4,
+  max_time = 30,
+  n_points = 1000
+))
+
+result |>
+  head() |>
+  print()
+
+result |>
+  as_tibble() |>
+  select(time, I) |>
+  mutate(across(everything(), as.numeric)) |>
+  ggplot(aes(time, I)) +
+  geom_line()
+```
+
+If we wanted to try a simulation over multiple values, it would be easier if we
+just pulled from an experiment specification. Here's the raw specification:
+
+```{r spec}
+readLines("sir_params.yaml") |>
+  paste(collapse = "\n") |>
+  cat()
+```
+
+Note the use of `!!float` to force YAML to parse `1e-4` as a number and not the
+string `"1e-4"`.
+
+Let's read this specification in:
+
+```{r read_spec}
+parameter_sets <- read_griddle("sir_params.yaml")
+cat(yaml::as.yaml(parameter_sets))
+```
+
+The griddle produces a list of 4 parameter sets, each of which is
+a list of parameter names and values.
+
+We can run an experiment, using those parameter sets and a simulation function. Here
+I call the `sir()` function again:
+
+```{r run_experiment}
+output <- run(
+  fun = sir,
+  parameter_sets = parameter_sets
+)
+
+str(output)
+```
+
+There is a bunch of stuff in here:
+
+- `fun`: The simulation function
+- `parameter_map`: A named list. The list elements are the parameter sets
+  (which are themselves named lists of parameters). The list names are hashes
+  of those parameter sets.
+- `simulations`: One simulation per parameter set. Each simulation has:
+  - `parameter_hash`: the hash corresponding to the parameter used
+  - `result`: the output from `fun` when called on this parameter set
+
+For convenience, there is a way to "flatten" all the results into a single
+tibble, annotated with the parameter values. This works if the simulation results
+are all tibbles and the parameter values are all scalars:
+
+```{r flatten}
+flatten_run(output)
+```
+
+The flat results make simple EDA easy:
+
+```{r plot, fig.width=6}
+flatten_run(output) |>
+  mutate(across(c(R0, infectious_period, I0), factor)) |>
+  ggplot(aes(time, I)) +
+  facet_wrap(vars(infectious_period), labeller = label_both) +
+  geom_line(aes(color = R0, linetype = I0)) +
+  ggtitle("SIR ODE, for varying R0 and infectious period")
+```
+
+Note that, because we nested $I_0$ under $R_0$, those two values very together
+(i.e., all the solid lines are blue, dashed red).

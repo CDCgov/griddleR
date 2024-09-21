@@ -1,0 +1,85 @@
+---
+title: "Caching with griddleR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Caching with griddleR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(griddleR)
+```
+
+```{r run_cache}
+parameter_sets <- read_griddle("stochastic_params.yaml")
+
+cache <- file.path(tempdir(), "cache")
+
+run_cache(
+  fun = replicated(function(ps) {
+    tibble::tibble(x = rgamma(1e2, shape = ps$shape, scale = ps$scale))
+  }),
+  parameter_sets = parameter_sets,
+  path = cache
+)
+```
+
+The parameter sets are saved, each in their own RDS file:
+
+```{r parameter_set_files}
+list.files(file.path(cache, "parameter_sets"))
+```
+
+And each individual file is a parameter set:
+
+```{r parameter_set_file}
+list.files(file.path(cache, "parameter_sets"), full.names = TRUE)[1] |>
+  readr::read_rds() |>
+  str()
+```
+
+The data are saved in an Arrow database, partitioned by the parameter hash:
+
+```{r results}
+list.files(file.path(cache, "results"), recursive = TRUE)
+```
+
+We could manually pull out some particular hash:
+
+```{r one_result}
+arrow::read_parquet(file.path(
+  cache,
+  "results",
+  "parameter_hash=0d0b76c91e2de2752bbe68c2a347fed7",
+  "part-0.parquet"
+))
+```
+
+But it's easier to work via the Arrow dataset. `query_cache()` will join the
+cached parameters to the Arrow dataset via the hash:
+
+```{r}
+query_cache(cache)
+```
+
+And so you can pull out just the simulations of interest:
+
+```{r}
+query_cache(cache) |>
+  dplyr::filter(shape == 1.0) |>
+  head() |>
+  dplyr::collect()
+```
+
+Note that `filter()` in the above is working at the level of the Arrow query,
+before any data is actually loaded in. This series of commands looks in the
+parameter cache, finds only those hashes with `shape == 1.0`, and then reads
+only the simulations matching those hashes into memory with `collect()`.

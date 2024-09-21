@@ -1,0 +1,6 @@
+linters: linters_with_defaults(
+    object_usage_linter = NULL,
+    cyclocomp_linter = NULL,
+    # acceptable names include N and dS
+    object_name_linter(styles = c("snake_case", "symbols"), regexes = "^d?[A-Z]$"))
+encoding: "UTF-8"

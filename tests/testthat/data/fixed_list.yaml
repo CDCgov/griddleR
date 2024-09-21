@@ -1,0 +1,6 @@
+baseline_parameters:
+  n_populations: 5
+  population_sizes: [100, 200, 300, 400, 500]
+
+grid_parameters:
+  R0: [1.5, 2.0]

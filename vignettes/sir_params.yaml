@@ -1,0 +1,13 @@
+baseline_parameters:
+  max_time: 30
+  n_points: 1000
+
+grid_parameters:
+  R0: [1.5, 2.0]
+  infectious_period: [1.0, 2.0]
+
+nested_parameters:
+  - R0: 1.5
+    I0: !!float 1e-4
+  - R0: 2.0
+    I0: !!float 1e-5

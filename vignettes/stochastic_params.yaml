@@ -1,0 +1,7 @@
+grid_parameters:
+  shape: [0.5, 1.0, 2.0]
+  scale: [0.5, 1.0, 2.0]
+
+baseline_parameters:
+  n_replicates: 5
+  seed: 42

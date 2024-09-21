@@ -1,0 +1,13 @@
+baseline_parameters:
+  R0: 1.5
+  gamma: 1.0
+  pop_size: 100
+
+grid_parameters:
+  scenario: [baseline, short_infection, no_transmission]
+
+nested_parameters:
+  - scenario: no_transmission
+    R0: 0.0
+  - scenario: short_infection
+    gamma: 2.0

@@ -1,0 +1,6 @@
+baseline_parameters:
+  p_infected_initial: 0.001
+
+grid_parameters:
+  R0: [2.0, 3.0]
+  infectious_period: [0.5, 2.0]

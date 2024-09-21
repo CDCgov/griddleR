@@ -1,0 +1,9 @@
+grid_parameters:
+  R0: [2.0, 4.0]
+  infectious_period: [0.5, 2.0]
+
+nested_parameters:
+  - R0: 2.0
+    p_infected_initial: 0.01
+  - R0: 4.0
+    p_infected_initial: 0.0001

@@ -1,0 +1,4 @@
+baseline_parameters:
+  R0: 3.0
+  infectious_period: 1.0
+  p_infected_initial: 0.001

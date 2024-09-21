@@ -1,0 +1,5 @@
+^LICENSE\.md$
+^\.lintr$
+^\.pre-commit-config\.yaml$
+^\.secrets\.baseline$
+^\.github

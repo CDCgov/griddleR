@@ -1,0 +1,73 @@
+---
+title: "Stochastic simulations with griddleR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Stochastic simulations with griddleR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(griddleR)
+library(ggplot2)
+```
+
+See the SIR ODE example for using a grid of values. Now we'll combine that with
+replicates of stochastic simulations.
+
+Imagine we were interested in a grid search over the shape and scale parameters
+of a gamma distribution:
+
+```{r show_spec}
+readLines("stochastic_params.yaml") |>
+  paste(collapse = "\n") |>
+  cat()
+```
+
+For a trivial example, I'll draw just one sample from the distribution, for each
+combination of parameters:
+
+```{r experiment}
+parameter_sets <- griddleR::read_griddle("stochastic_params.yaml")
+
+f1 <- replicated(function(ps) {
+  tibble::tibble(x = rgamma(1, shape = ps$shape, scale = ps$scale))
+})
+
+output <- run(fun = f1, parameter_sets = parameter_sets)
+
+flatten_run(output)
+```
+
+We get the same results if we do that all over again:
+
+```{r experiment_repeat}
+run(fun = f1, parameter_sets = parameter_sets) |>
+  flatten_run()
+```
+
+It's a bit silly to take only a single random value per seed, so instead let's
+draw many:
+
+```{r plot, fig.width = 6, fig.height = 6}
+f2 <- replicated(function(ps) {
+  tibble::tibble(x = rgamma(1e3, shape = ps$shape, scale = ps$scale))
+})
+
+output <- run(fun = f2, parameter_sets = parameter_sets)
+
+flatten_run(output) |>
+  ggplot(aes(factor(replicate), x)) +
+  facet_wrap(vars(shape, scale), scales = "free_x", labeller = label_both) +
+  geom_violin()
+```
+
+Note that the results are consistent for the same shape and scale parameters,
+but they are not identical across seeds.
