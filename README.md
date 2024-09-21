@@ -1,49 +1,36 @@
 # griddleR
 
-Keep those parameters safe & tidy!
+griddleR is an opinionated tool for managing inputs to simulations or other
+analytical functions. This package includes functionality for:
+
+- Parameter sets: an extension of `list` that does some extra validation and can
+  produce stable hashes.
+- Griddles: a YAML-based format for specifying grid-like lists of parameter
+  sets.
+- Running a function over multiple parameter sets, and "squashing" the results
+  into a single [tibble](https://tibble.tidyverse.org/).
+- Running a simulation function over multiple replicates with specified seeds.
+
+This package is intended to be an R port of the Python
+[pygriddler](https://github.com/CDCgov/pygriddler) package. Not all
+functionality will be identical between the two packages.
+
+See the [pygriddler documentation](https://cdcgov.github.io/pygriddler/) for
+more details.
 
 ## Package overview
 
 This package helps wrap your simulations' input and output.
 
-The basic assumption is that you have some function, let's call it
-`myPack::simulate()`, that takes a named list of parameters and returns
-a flat data frame. For example, an ODE SIR model would take in $R_0$, infectious
-period $1/\gamma$, and some other parameters, and return a tibble of times and
-compartment sizes.
-
-## Concepts
-
-- _Parameter_: A combination of a string name and an arbitrary value.
-- _Parameter set_: An unordered set of parameters.
-- _Simulation function_: A function that takes in a parameter set and returns a _result_.
-
-## Overview of functionality
-
-### Current functionality
-
-- [Parameter input](#parameter-input)
-
-### Future functionality
-
-- Running simulations, given parameter input
-  - Handles parallelization with `futures` and `furrr`
-- Caching results
-  - Creates a persistent database linking arbitrary simulation IDs (e.g., UUIDs)
-    with parameter values
-  - Concatenates and stores results in an Arrow database, partitioned by
-    simulation ID and replicate chunk
-  - Does some sensible chunking (e.g., don't put more than a 10,000 simulations
-    into one partition?)
-- Pulls from cached results
-  - Eg, maybe you can say `get_cache(myPack::simulate, my_params)` and then it
-    pops right out
-  - Unclear how you pull replicates out of that?
+The basic assumption is that you have some function, say `simulate()`, that
+takes a named list of parameters and returns a tibble. For example, an ODE SIR
+model would take in $R_0$, infectious period $1/\gamma$, and some other
+parameters, and return a tibble of times and compartment sizes.
 
 ## Parameter input
 
-This package provides a standard file format, called the **_griddle_**, to articulate parameter inputs,
-including options for specifying:
+This package provides a standard file format, called the **_griddle_**, to
+articulate parameter inputs, including options for specifying:
 
 - Baseline parameters
 - A grid of parameter values, to produce varied simulations
@@ -56,7 +43,6 @@ including options for specifying:
 - The specification is a named list:
   - It must have at least one of `baseline_parameters` or `grid_parameters`.
   - If it has `grid_parameters`, it may also have `nested_parameters`.
-  - It must not have any other keys
 - `baseline_parameters` is a named list.
   - The names are parameter names; the values are parameter values.
   - The parameter values need not be scalars. E.g., it might be a list of
@@ -64,13 +50,13 @@ including options for specifying:
 - `grid_parameters` is a named list.
   - The names are parameter names. Each value is a vector or a list. The
     elements in that list are the parameter values gridded over.
-  - No name can be repeated between `baseline_parameters` and `grid_parameters`.
 - `nested_parameters` is an _unnamed_ list.
   - Each element is a named list, called a "nest."
   - Every nest have at least one name that appears in the grid.
   - Names in each nest must be either:
-    1.  Present in `grid_parameters` or `baseline_parameters` (but not both), _or_
-    1.  Present in each nest.
+    1.  present in `grid_parameters` or `baseline_parameters` (but not both),
+        _or_
+    1.  present in each nest.
 
 This parameter specification parser will produce a list:
 
@@ -78,19 +64,11 @@ This parameter specification parser will produce a list:
 - The length of which is equal to the product of the lengths of the parameter
   value lists in `grid_parameters`.
 
-### Examples
+### Example: grids
 
-In the simplest case, the griddle file will produce one parameter set:
-
-```yaml
-baseline_parameters:
-  R0: 3.0
-  infectious_period: 1.0
-  p_infected_initial: 0.001
-```
-
-But maybe you want to run simulations over a grid of parameters. So instead use
-`grid_parameters`:
+This griddle will produce 4 parameter sets, over the Cartesian product of the
+parameter values for $R_0$ and $1/\gamma$. Each parameter set will have 3
+parameters: $p_{I0}$, $R_0$, and $1/\gamma$.
 
 ```yaml
 baseline_parameters:
@@ -101,46 +79,12 @@ grid_parameters:
   infectious_period: [0.5, 2.0]
 ```
 
-This will run 4 parameter sets, over the Cartesian product of the parameter values
-for $R_0$ and $1/\gamma$.
+### Example: nests
 
-If you want to run many replicates of each of those parameter sets, wrap your single function in another function that takes the random seed and number of replicates:
-
-```yaml
-baseline_parameters:
-  p_infected_initial: 0.001
-  seed: 42
-  n_replicates: 100
-
-grid_parameters:
-  R0: [2.0, 3.0]
-  infectious_period: [0.5, 2.0]
-```
-
-This will still produce 4 parameter sets, and it will be up to your wrapped simulation function to know how to run all the replicates.
-
-If you want to include nested values, use `nested_parameters`. The names in each nest that match `grid_parameters` will be used to determine which part of the grid we are in, and the rest of the parameters in the nest will be added in to that part of the grid. For example:
-
-```yaml
-grid_parameters:
-  R0: [2.0, 4.0]
-  infectious_period: [0.5, 2.0]
-
-nested_parameters:
-  - R0: 2.0
-    p_infected_initial: 0.01
-  - R0: 4.0
-    p_infected_initial: 0.0001
-```
-
-The nested values of $R_0$ match against the grid, and will add the $p_{I0}$ values in to those parts of the grid. Thus, this will produce 4 parameter sets:
-
-1. $R_0=2$, $1/\gamma=0.5$, $p_{I0}=10^{-2}$
-1. $R_0=2$, $1/\gamma=2$, $p_{I0}=10^{-2}$
-1. $R_0=4$, $1/\gamma=0.5$, $p_{I0}=10^{-4}$
-1. $R_0=4$, $1/\gamma=2$, $p_{I0}=10^{-4}$
-
-Nested parameters can be used to make named scenarios:
+If you want to include nested values, use `nested_parameters`. The names in each
+nest that match `grid_parameters` will be used to determine which part of the
+grid we are in, and the rest of the parameters in the nest will be added in to
+that part of the grid. Nested parameters can be used to make named scenarios:
 
 ```yaml
 baseline_parameters:
@@ -160,37 +104,31 @@ nested_parameters:
 
 This will produce 2 parameter sets.
 
-You cannot repeat a parameter name that is in `baseline_parameters` in `grid_parameters`, because it would be overwritten every time. But you can use `nested_parameters` to sometimes overwrite a baseline parameter value:
+## Replicates
+
+A convenience function `replicated()` allows your to wrap your simulation
+function `simulate()` with a seed and number of replicates. These parameters
+(`seed` and `n_replicates`) must be present in the parameter set passed to
+`replicated(simulate)()`. The wrapper will remove those values before passing
+the remainder to `simulate()`. It will set the seed, then run that number of
+replicates. Each output tibble from `simulate()` will have a `replicate` column
+added.
+
+For example:
 
 ```yaml
 baseline_parameters:
-  R0: 2.0
-  infectious_period: 1.0
   p_infected_initial: 0.001
+  seed: 42
+  n_replicates: 100
 
 grid_parameters:
-  scenario: [short_infection, long_infection, no_infection]
-  population_size: [!!float 1e3, !!float 1e4]
-
-nested_parameters:
-  - scenario: short_infection
-    infectious_period: 0.5
-  - scenario: long_infection
-    infectious_period: 2.0
-  - scenario: no_infection
-    R0: 0.0
+  R0: [2.0, 3.0]
+  infectious_period: [0.5, 2.0]
 ```
 
-This will produce 6 parameter sets:
-
-1. $R_0 = 2$, $\gamma = 1/0.5$, $N = 10^3$, $p_{I0} = 10^{-3}$
-1. $R_0 = 2$, $\gamma = 1/0.5$, $N = 10^4$, $p_{I0} = 10^{-3}$
-1. $R_0 = 2$, $\gamma = 1/2.0$, $N = 10^3$, $p_{I0} = 10^{-3}$
-1. $R_0 = 2$, $\gamma = 1/2.0$, $N = 10^4$, $p_{I0} = 10^{-3}$
-1. $R_0 = 0$, $\gamma = 1.0$, $N = 10^3$, $p_{I0} = 10^{-3}$
-1. $R_0 = 0$, $\gamma = 1.0$, $N = 10^4$, $p_{I0} = 10^{-3}$
-
-All of them have the same fixed parameter value $p_{I0}$. Half of them have each of the two grid parameter values $N$. For each of the three scenarios, there is a mix of $R_0$ and $\gamma$ values drawn from `baseline_parameters` and `nested_parameters`.
+This will still produce 4 parameter sets, but if passed to
+`replicated(simulate)()`, it will produce 400 output tibbles.
 
 ## Project Admin
 

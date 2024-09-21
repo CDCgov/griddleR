@@ -1,9 +1,10 @@
 Package: griddleR
-Title: Wrap Simulation Input and Output
+Title: Grid-based Simulation Parameter Inputs
 Version: 0.0.0.9000
 Authors@R:
     person("Scott", "Olesen", , "ulp7@cdc.gov", role = c("aut", "cre"))
-Description: Standardize parameter input, input storage, and output.
+Description: Tools for common parameters of simulation parameter
+  specification and input
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
