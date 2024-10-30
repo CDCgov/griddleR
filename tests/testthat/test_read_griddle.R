@@ -85,3 +85,22 @@ test_griddle(
     )
   )
 )
+
+test_griddle("nest_only", list(
+  list(
+    vaccine_scenario = "baseline", vaccine_amount = 100,
+    intervention_scenario = "baseline", intervention_efficacy = 0.3
+  ),
+  list(
+    vaccine_scenario = "baseline", vaccine_amount = 100,
+    intervention_scenario = "optimistic", intervention_efficacy = 0.8
+  ),
+  list(
+    vaccine_scenario = "optimistic", vaccine_amount = 200,
+    intervention_scenario = "baseline", intervention_efficacy = 0.3
+  ),
+  list(
+    vaccine_scenario = "optimistic", vaccine_amount = 200,
+    intervention_scenario = "optimistic", intervention_efficacy = 0.8
+  )
+))
