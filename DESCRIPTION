@@ -1,10 +1,10 @@
 Package: griddleR
 Title: Grid-based Simulation Parameter Inputs
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     person("Scott", "Olesen", , "ulp7@cdc.gov", role = c("aut", "cre"))
-Description: Tools for common parameters of simulation parameter
-  specification and input
+Description: This package contains tools for common parameters of
+  simulation parameter specification and input.
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -30,5 +30,6 @@ Imports:
     purrr,
     rlang,
     tidyr,
+    utils,
     yaml
 VignetteBuilder: knitr

@@ -16,7 +16,7 @@ flatten_run <- function(output, remove_fixed = TRUE) {
     }
   )
 
-  parameters_with_hashes <- flatten_map(output$parameter_map)
+  parameters_with_hashes <- flatten_named_parameter_sets(output$parameter_map)
 
   if (remove_fixed) {
     parameters_with_hashes <- parameters_with_hashes |>
@@ -34,18 +34,44 @@ flatten_run <- function(output, remove_fixed = TRUE) {
 
 #' Convert a named list of lists into a tibble
 #'
-#' @param x named list, where each element is a list that can be coerced to
-#' tibble
+#' @param x named list, where each list element is a named list of parameters,
+#'   which will be flattened into a tibble
 #' @param nm_column column in the output tibble to assign the list names to
 #' @return tibble
-flatten_map <- function(x, nm_column = "parameter_hash") {
+flatten_named_parameter_sets <- function(x, nm_column = "parameter_hash") {
   purrr::map2_dfr(
     names(x),
     x,
-    function(nm, value) {
-      df <- dplyr::as_tibble(value)
+    function(nm, parameter_set) {
+      df <- flatten_parameter_set(parameter_set)
       df[[nm_column]] <- nm
       df
     }
   )
+}
+
+#' Convert a parameter set into a tibble
+#'
+#' @param x named list
+#' @return tibble
+flatten_parameter_set <- function(x) {
+  dplyr::as_tibble(purrr::map(x, flatten_value))
+}
+
+#' Convert a value, potentially a vector, into a single value
+#'
+#' Use `str()` to convert objects with length greater than 1
+#' into a single string.
+#'
+#' @param x input value
+#'
+#' @return length-1 value, whose type depends on `x`
+flatten_value <- function(x) {
+  if (length(x) == 1) {
+    # no need to do anything if this is a length-1 object
+    x
+  } else {
+    # otherwise, use `str()` representation
+    trimws(utils::capture.output(utils::str(x)))
+  }
 }
