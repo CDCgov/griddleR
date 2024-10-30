@@ -1,6 +1,6 @@
 grid_parameters:
-  vaccine_scenario: baseline, optimistic
-  intervention_scenario: baseline, optimistic
+  vaccine_scenario: [baseline, optimistic]
+  intervention_scenario: [baseline, optimistic]
 nested_parameters:
   - vaccine_scenario: baseline
     vaccine_amount: 100

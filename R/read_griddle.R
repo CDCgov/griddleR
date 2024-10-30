@@ -47,6 +47,8 @@ parse_griddle <- function(griddle) {
     }
   }
 
+  validate_parameter_sets(parameter_sets)
+
   parameter_sets
 }
 
@@ -152,26 +154,20 @@ validate_griddle <- function(griddle) {
       # every nest must have at least one name that appears in the grid
       stopifnot(length(intersect(names(nest), grid_names)) >= 1)
     }
-
-    # nested names must (1) in every nest or one of (2A) in the grid or
-    # (2B) in the baseline
-    for (nm in nested_names) {
-      in_grid <- nm %in% grid_names
-      in_baseline <- has_baseline && (nm %in% baseline_names)
-      in_all_nests <- all(purrr::map_lgl(
-        nested_names_by_nest,
-        function(nms) nm %in% nms
-      ))
-      if (in_grid && in_baseline) {
-        stop(glue::glue("Parameter `{nm}` in grid and baseline"))
-      }
-      if (!(in_grid || in_baseline) && !in_all_nests) {
-        stop(glue::glue("Parameter `{nm}` not in grid, baseline, or all nests"))
-      }
-    }
   }
 
   TRUE
+}
+
+validate_parameter_sets <- function(parameter_sets) {
+  # all parameter sets must be lists
+  stopifnot(all(purrr::map_lgl(parameter_sets, function(x) class(x) == "list")))
+
+  # all parameter sets must have the same names
+  names_list <- purrr::map(parameter_sets, names)
+  stopifnot(all(
+    purrr::map_lgl(names_list, function(x) identical(x, names_list[[1]]))
+  ))
 }
 
 #' Either is an integer, or equal to its integer cast
