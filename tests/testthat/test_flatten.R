@@ -35,9 +35,9 @@ test_that("trivial flatten without removal", {
   )
 })
 
-test_that("can flatten string vector values", {
+test_that("can flatten vector values", {
+  # length-1 values return themselves
   expect_equal(flatten_value("x"), "x")
-  expect_equal(flatten_value(c("x", "y")), "'x','y'")
-  # currently no support for other types of vectors
-  expect_error(flatten_value(c(1, 2)))
+  expect_equal(flatten_value(c("x", "y")), 'chr [1:2] "x" "y"')
+  expect_equal(flatten_value(c(1, 2)), "num [1:2] 1 2")
 })
