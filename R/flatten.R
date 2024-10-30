@@ -72,6 +72,6 @@ flatten_value <- function(x) {
     x
   } else {
     # otherwise, use `str()` representation
-    trimws(capture.output(str(x)))
+    trimws(utils::capture.output(utils::str(x)))
   }
 }
