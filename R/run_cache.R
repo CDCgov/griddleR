@@ -73,7 +73,7 @@ query_cache <- function(path) {
   results_dir <- file.path(path, "results")
 
   parameters_map <- read_parameter_map(ps_dir)
-  parameters_with_hashes <- flatten_map(parameters_map)
+  parameters_with_hashes <- flatten_named_parameter_sets(parameters_map)
 
   arrow::open_dataset(results_dir) |>
     dplyr::inner_join(parameters_with_hashes, by = "parameter_hash")
