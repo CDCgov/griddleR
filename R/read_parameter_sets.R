@@ -21,4 +21,10 @@ validate_parameter_sets <- function(parameter_sets) {
       stop("Parameter set must be named")
     }
   }
+
+  # all parameter sets must have the same names
+  names_list <- purrr::map(parameter_sets, names)
+  stopifnot(all(
+    purrr::map_lgl(names_list, function(x) identical(x, names_list[[1]]))
+  ))
 }

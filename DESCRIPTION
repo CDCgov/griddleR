@@ -1,6 +1,6 @@
 Package: griddleR
 Title: Grid-based Simulation Parameter Inputs
-Version: 0.1.1
+Version: 0.1.2
 Authors@R:
     person("Scott", "Olesen", , "ulp7@cdc.gov", role = c("aut", "cre"))
 Description: This package contains tools for common parameters of

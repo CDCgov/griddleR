@@ -1,0 +1,12 @@
+grid_parameters:
+  vaccine_scenario: [baseline, optimistic]
+  intervention_scenario: [baseline, optimistic]
+nested_parameters:
+  - vaccine_scenario: baseline
+    vaccine_amount: 100
+  - vaccine_scenario: optimistic
+    vaccine_amount: 200
+  - intervention_scenario: baseline
+    intervention_efficacy: 0.3
+  - intervention_scenario: optimistic
+    intervention_efficacy: 0.8

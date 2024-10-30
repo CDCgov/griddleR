@@ -85,3 +85,28 @@ test_griddle(
     )
   )
 )
+
+test_griddle("nest_only", list(
+  list(
+    vaccine_scenario = "baseline", intervention_scenario = "baseline",
+    vaccine_amount = 100, intervention_efficacy = 0.3
+  ),
+  list(
+    vaccine_scenario = "baseline", intervention_scenario = "optimistic",
+    vaccine_amount = 100, intervention_efficacy = 0.8
+  ),
+  list(
+    vaccine_scenario = "optimistic", intervention_scenario = "baseline",
+    vaccine_amount = 200, intervention_efficacy = 0.3
+  ),
+  list(
+    vaccine_scenario = "optimistic", intervention_scenario = "optimistic",
+    vaccine_amount = 200, intervention_efficacy = 0.8
+  )
+))
+
+test_that("missing nests fail", {
+  expect_error({
+    read_griddle(test_path("data", "nest_missing.yaml"))
+  })
+})
