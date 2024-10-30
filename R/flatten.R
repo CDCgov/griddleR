@@ -42,10 +42,36 @@ flatten_map <- function(x, nm_column = "parameter_hash") {
   purrr::map2_dfr(
     names(x),
     x,
-    function(nm, value) {
-      df <- dplyr::as_tibble(value)
+    function(nm, parameter_set) {
+      df <- flatten_parameter_set(parameter_set)
       df[[nm_column]] <- nm
       df
     }
   )
+}
+
+#' Convert a parameter set into a tibble
+#'
+#' @param x named list
+#' @return tibble
+flatten_parameter_set <- function(x) {
+  dplyr::as_tibble(purrr::map(x, flatten_value))
+}
+
+#' Convert a value, potentially a vector, into a single value
+#'
+#' @param x input value
+#'
+#' @return length-1 value, whose type depends on `x`
+flatten_value <- function(x) {
+  # no need to do anything if this is a length-1 object
+  if (length(x) == 1) {
+    return(x)
+  } else {
+    if (is.character(x)) {
+      paste0(shQuote(x), collapse = ",")
+    } else {
+      stop("Cannot flatten value of type ", typeof(x))
+    }
+  }
 }
