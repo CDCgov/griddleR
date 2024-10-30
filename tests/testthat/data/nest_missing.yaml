@@ -1,0 +1,6 @@
+grid_parameters:
+  vaccine_scenario: [baseline, optimistic]
+nested_parameters:
+  - vaccine_scenario: baseline
+    vaccine_amount: 100
+  # note that there should be a specification of optimistic vaccine amount here

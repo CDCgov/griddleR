@@ -159,17 +159,6 @@ validate_griddle <- function(griddle) {
   TRUE
 }
 
-validate_parameter_sets <- function(parameter_sets) {
-  # all parameter sets must be lists
-  stopifnot(all(purrr::map_lgl(parameter_sets, function(x) class(x) == "list")))
-
-  # all parameter sets must have the same names
-  names_list <- purrr::map(parameter_sets, names)
-  stopifnot(all(
-    purrr::map_lgl(names_list, function(x) identical(x, names_list[[1]]))
-  ))
-}
-
 #' Either is an integer, or equal to its integer cast
 #'
 #' @param x value
