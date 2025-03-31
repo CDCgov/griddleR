@@ -1,5 +1,9 @@
 # griddleR
 
+:warning: Development of [pygriddler](https://github.com/CDCgov/pygriddler) has diverged from development of griddleR. As of pygriddler [v0.3](https://github.com/CDCgov/pygriddler/releases/tag/v0.3.0), the griddler syntax has been reformulated, and functionality beyond parsing griddles has been removed. griddleR uses should not expect feature parity or regular updates.
+
+---
+
 griddleR is an opinionated tool for managing inputs to simulations or other
 analytical functions. This package includes functionality for:
 
