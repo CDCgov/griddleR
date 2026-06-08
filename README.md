@@ -1,7 +1,7 @@
 > [!CAUTION]
 > - This repository has been archived and is no longer maintained.
 > - The code is provided for historical reference and may contain unpatched or unknown vulnerabilities.
-> - It should not be used in production systems.\n\n# griddleR
+> - It should not be used in production systems.
 
 :warning: Development of [pygriddler](https://github.com/CDCgov/pygriddler) has diverged from development of griddleR. As of pygriddler [v0.3](https://github.com/CDCgov/pygriddler/releases/tag/v0.3.0), the griddler syntax has been reformulated, and functionality beyond parsing griddles has been removed. griddleR uses should not expect feature parity or regular updates.
 
